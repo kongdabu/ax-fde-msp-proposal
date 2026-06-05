@@ -14,8 +14,9 @@
 추가로 **4-Phase 이행 로드맵 · 통합 KPI 트리 · 리스크 대응 · 정합성 검수**를 포함합니다.
 
 ## 웹페이지
-- `index.html` — 반응형 대시보드(목차 네비게이션, 스크롤 스파이). `proposal.md`를 렌더링.
-- `proposal.md` / `AX_FDE_사업추진안.md` — 통합 추진안 본문(동일 내용).
+- `index.html` — **자체 완결형(self-contained) 반응형 대시보드**(목차 네비게이션·스크롤 스파이). 본문이 HTML에 미리 렌더링되어 내장됨(런타임 `fetch`·외부 마크다운 라이브러리 의존 없음, Google Fonts만 사용).
+- `proposal.md` / `AX_FDE_사업추진안.md` — 통합 추진안 본문 소스(동일 내용).
+- `build.py` — `proposal.md`를 pandoc로 변환해 `index.html`을 생성하는 빌더. 본문 수정 시 `python3 build.py`로 재생성.
 
 ## 배포
 `main` 브랜치 푸시 시 `.github/workflows/deploy.yml`이 GitHub Pages로 자동 배포합니다.
