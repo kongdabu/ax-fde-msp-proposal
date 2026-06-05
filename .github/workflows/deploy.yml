@@ -1,0 +1,40 @@
+name: Deploy to GitHub Pages
+
+# main 브랜치 푸시 시 정적 사이트를 GitHub Pages로 배포한다
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Pages 배포에 필요한 권한
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 동시 배포 1건만 유지 (진행 중 배포는 취소하지 않음)
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Pages 설정
+        uses: actions/configure-pages@v5
+
+      - name: 산출물 업로드 (리포지토리 루트 전체)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Pages 배포
+        id: deployment
+        uses: actions/deploy-pages@v4
