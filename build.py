@@ -214,8 +214,10 @@ PAGE_TMPL = '''<!DOCTYPE html>
 
 
 def md_to_fragment(src):
+  # gfm(CommonMark) 리더는 한글에 바로 붙은 **볼드**다 패턴을 강조로 렌더링하지 못한다
+  # (강조 경계 flanking 규칙). pandoc 확장 markdown 리더는 이를 처리한다(표·코드블록 동일 지원).
   frag = subprocess.run(
-    ["pandoc", src, "--from", "gfm", "--to", "html5", "--syntax-highlighting=none"],
+    ["pandoc", src, "--from", "markdown", "--to", "html5", "--syntax-highlighting=none"],
     capture_output=True, text=True, check=True,
   ).stdout
   # 맨 앞 중복 제목(h1)은 히어로와 겹치므로 제거
