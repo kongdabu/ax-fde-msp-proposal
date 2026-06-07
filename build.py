@@ -1,31 +1,12 @@
 #!/usr/bin/env python3
-# proposal.md → 자체 완결형 index.html 생성 빌더
-# pandoc로 만든 본문 HTML 조각을 템플릿에 내장한다(런타임 fetch 없음).
-import subprocess, re, sys, pathlib
+# 마크다운 → 자체 완결형 HTML 다중 페이지 빌더
+# - 두 타깃 버전(SI 구축시장 / ITO·Application MSP 운영시장)과
+#   통합본(combined)을 각각 독립 HTML로 생성하고, 비교 진입용 랜딩(index.html)을 만든다.
+# - pandoc로 만든 본문 HTML 조각을 템플릿에 내장한다(런타임 fetch 없음).
+import subprocess, re, pathlib
 
-SRC = "proposal.md"
-OUT = "index.html"
-
-# 1) pandoc로 본문 조각 생성 (GFM, 헤딩 id 포함)
-frag = subprocess.run(
-    ["pandoc", SRC, "--from", "gfm", "--to", "html5", "--syntax-highlighting=none"],
-    capture_output=True, text=True, check=True,
-).stdout
-
-# 2) 맨 앞 중복 제목(h1)·부제(h3)·정의 blockquote는 히어로와 겹치므로 제거
-frag = re.sub(r'<h1[^>]*>.*?</h1>', '', frag, count=1, flags=re.S)
-
-TEMPLATE = '''<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AX FDE 사업 추진안 (v2.0) — 한국 MSP 운영 내재화형 FDE</title>
-<meta name="description" content="한국 MSP 시장 운영 내재화형 AX FDE 조직·사업 추진안. 약 50명·Squad(4~7명)·6~8주 타임박스. 전략·조직·프로세스·툴·역량 5개 축 통합." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<style>
+# ── 공통 스타일(모든 페이지 공유) ───────────────────────────────────────────
+STYLE = '''
 :root{
   --bg:#0e1726;--surface:#fff;--surface-2:#f4f7fb;--ink:#1a2233;--ink-soft:#5a6678;
   --line:#e3e9f2;--brand:#2563eb;--brand-deep:#1d4ed8;--accent:#06b6d4;--gold:#f59e0b;
@@ -44,17 +25,31 @@ code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
   radial-gradient(900px 500px at 0% 0%,rgba(37,99,235,.35),transparent 55%),
   linear-gradient(135deg,#0e1726 0%,#14213a 60%,#1b2c52 100%);
   color:#eaf1ff;padding:74px 24px 64px;position:relative;overflow:hidden}
+.hero.theme-si{background:
+  radial-gradient(1200px 500px at 80% -10%,rgba(245,158,11,.20),transparent 60%),
+  radial-gradient(900px 500px at 0% 0%,rgba(37,99,235,.35),transparent 55%),
+  linear-gradient(135deg,#0e1726 0%,#16223f 60%,#1c2e57 100%)}
+.hero.theme-ito{background:
+  radial-gradient(1200px 500px at 80% -10%,rgba(6,182,212,.28),transparent 60%),
+  radial-gradient(900px 500px at 0% 0%,rgba(16,163,74,.28),transparent 55%),
+  linear-gradient(135deg,#0e1726 0%,#102a2c 60%,#103a4f 100%)}
 .hero::after{content:"";position:absolute;inset:0;
   background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
   linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;
   -webkit-mask-image:radial-gradient(700px 400px at 70% 0%,#000,transparent 75%);
   mask-image:radial-gradient(700px 400px at 70% 0%,#000,transparent 75%);pointer-events:none}
 .hero-inner{max-width:1080px;margin:0 auto;position:relative;z-index:1}
+.backlink{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#9fd4ff;text-decoration:none;
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);padding:6px 14px;border-radius:999px;
+  margin-bottom:22px;transition:all .15s}
+.backlink:hover{background:rgba(255,255,255,.14);color:#fff}
 .tag{display:inline-block;font-size:12.5px;letter-spacing:.14em;font-weight:700;color:#8fd4ff;
   background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.35);padding:6px 14px;border-radius:999px;text-transform:uppercase}
 .hero h1{font-size:clamp(28px,5vw,46px);font-weight:900;line-height:1.25;margin:20px 0 12px;letter-spacing:-.02em}
 .hero h1 .hl{color:#5ec6ff}
-.hero p.lead{font-size:clamp(15px,2.2vw,18px);color:#b9c8e6;max-width:780px;margin:0 0 28px;font-weight:300}
+.hero.theme-si h1 .hl{color:#ffd166}
+.hero.theme-ito h1 .hl{color:#5eead4}
+.hero p.lead{font-size:clamp(15px,2.2vw,18px);color:#b9c8e6;max-width:820px;margin:0 0 28px;font-weight:300}
 .hero-meta{display:flex;flex-wrap:wrap;gap:10px 22px;font-size:13.5px;color:#9fb2d6}
 .hero-meta b{color:#dfe9ff;font-weight:500}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:36px}
@@ -128,99 +123,290 @@ footer{text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 24px 
   #content{padding:20px}
 }
 @media (max-width:560px){.kpis{grid-template-columns:1fr 1fr;gap:10px}.hero{padding:48px 18px 40px}}
-</style>
+'''
+
+FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com" />'
+  '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />'
+  '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900'
+  '&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />')
+
+PAGE_TMPL = '''<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{title}</title>
+<meta name="description" content="{desc}" />
+{fonts}
+<style>{style}</style>
 </head>
 <body>
-<header class="hero">
+<header class="hero {theme}">
   <div class="hero-inner">
-    <span class="tag">한국 MSP · AX Forward Deployed Engineer · v2.0</span>
-    <h1>운영 내재화형 <span class="hl">AX FDE</span> 조직·사업 추진안</h1>
-    <p class="lead">고객의 기존 IT운영(MSP) 현장에 내재화되어, AI(AIOps·GenAI)로 운영 성과를 내고 그 성과로 값을 받는 전담 엔지니어 조직. 약 50명·Squad(4~7명) 편제로 과제를 6~8주 타임박스로 수행한다. 전략·조직·프로세스·툴·역량 5개 축을 하나의 논리로 통합한 경영진 보고용 추진안입니다.</p>
-    <div class="hero-meta">
-      <span>작성 기준일 <b>2026-06-05</b></span>
-      <span>버전 <b>v2.0</b></span>
-      <span>독자 <b>경영진</b></span>
-      <span>구성 <b>5개 축 · 9개 장 · 부록 3</b></span>
-    </div>
-    <div class="kpis">
-      <div class="kpi"><div class="v">7→12<small>조원</small></div><div class="l">국내 MSP 시장 (’23→’26, 추정)</div></div>
-      <div class="kpi"><div class="v">74<small>%</small></div><div class="l">AIOps 도입사 MTTR 단축</div></div>
-      <div class="kpi"><div class="v">50<small>명</small></div><div class="l">초기 전담조직 · 약 6 Squad</div></div>
-      <div class="kpi"><div class="v">6~8<small>주</small></div><div class="l">과제 타임박스 딜리버리</div></div>
-    </div>
+    <a class="backlink" href="index.html">← 두 버전 비교 · 다른 타깃 보기</a>
+    <span class="tag">{tag}</span>
+    <h1>{h1}</h1>
+    <p class="lead">{lead}</p>
+    <div class="hero-meta">{meta}</div>
+    <div class="kpis">{kpis}</div>
   </div>
 </header>
 
-<div class="navbar"><b>AX FDE 사업 추진안 v2.0</b><button class="menu-btn" id="menuBtn">목차 ☰</button></div>
+<div class="navbar"><b>{navtitle}</b><button class="menu-btn" id="menuBtn">목차 ☰</button></div>
 <div class="scrim" id="scrim"></div>
 
 <div class="shell">
   <aside class="sidebar" id="sidebar"><h4>목차</h4><nav class="toc" id="toc"></nav></aside>
   <main><article id="content">
-__CONTENT__
+{content}
   </article></main>
 </div>
 
 <button class="backtop" id="backtop" aria-label="맨 위로">↑</button>
-<footer>본 추진안은 5개 축 산출물을 표준 스키마(항목→목표→Activity→Action Item)로 통합·정합성 검수한 결과입니다. · 자체 완결형 정적 페이지 · GitHub Pages 자동 배포</footer>
+<footer>{footer}</footer>
 
 <script>
-(function(){
+(function(){{
   var content=document.getElementById('content');
   var tocEl=document.getElementById('toc');
-
-  // 본문 표를 가로 스크롤 래퍼로 감싼다
-  [].forEach.call(content.querySelectorAll('table'),function(t){
+  [].forEach.call(content.querySelectorAll('table'),function(t){{
     var w=document.createElement('div');w.className='tbl-wrap';
     t.parentNode.insertBefore(w,t);w.appendChild(t);
-  });
-
-  // h2 기반 사이드바 목차 생성 ('목차' 섹션은 제외)
-  var heads=[].filter.call(content.querySelectorAll('h2'),function(h){
+  }});
+  var heads=[].filter.call(content.querySelectorAll('h2'),function(h){{
     return h.textContent.replace(/\\s/g,'')!=='목차';
-  });
-  heads.forEach(function(h){
+  }});
+  heads.forEach(function(h){{
     if(!h.id) h.id='sec-'+Math.random().toString(36).slice(2,8);
     var a=document.createElement('a');a.href='#'+h.id;
     var m=h.textContent.match(/^(\\d+|부록\\s*[A-Z])\\.?\\s*/);
-    if(m){a.innerHTML='<span class="num">'+m[1].replace('부록 ','')+'</span>'+h.textContent.slice(m[0].length);}
-    else{a.textContent=h.textContent;}
+    if(m){{a.innerHTML='<span class="num">'+m[1].replace('부록 ','')+'</span>'+h.textContent.slice(m[0].length);}}
+    else{{a.textContent=h.textContent;}}
     a.addEventListener('click',closeNav);
     tocEl.appendChild(a);
-  });
-
-  // 스크롤 스파이
+  }});
   var links=[].slice.call(tocEl.querySelectorAll('a'));
-  if('IntersectionObserver' in window){
-    var obs=new IntersectionObserver(function(es){
-      es.forEach(function(e){
-        if(e.isIntersecting){
+  if('IntersectionObserver' in window){{
+    var obs=new IntersectionObserver(function(es){{
+      es.forEach(function(e){{
+        if(e.isIntersecting){{
           var i=heads.indexOf(e.target);
-          links.forEach(function(l){l.classList.remove('active');});
+          links.forEach(function(l){{l.classList.remove('active');}});
           if(links[i]) links[i].classList.add('active');
-        }
-      });
-    },{rootMargin:'-10% 0px -75% 0px',threshold:0});
-    heads.forEach(function(h){obs.observe(h);});
-  }
-
-  // 모바일 네비게이션
+        }}
+      }});
+    }},{{rootMargin:'-10% 0px -75% 0px',threshold:0}});
+    heads.forEach(function(h){{obs.observe(h);}});
+  }}
   var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim');
-  function openNav(){sidebar.classList.add('open');scrim.classList.add('show');}
-  function closeNav(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  function openNav(){{sidebar.classList.add('open');scrim.classList.add('show');}}
+  function closeNav(){{sidebar.classList.remove('open');scrim.classList.remove('show');}}
   document.getElementById('menuBtn').addEventListener('click',openNav);
   scrim.addEventListener('click',closeNav);
-
-  // 맨 위로
   var backtop=document.getElementById('backtop');
-  window.addEventListener('scroll',function(){backtop.classList.toggle('show',window.scrollY>600);});
-  backtop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
-})();
+  window.addEventListener('scroll',function(){{backtop.classList.toggle('show',window.scrollY>600);}});
+  backtop.addEventListener('click',function(){{window.scrollTo({{top:0,behavior:'smooth'}});}});
+}})();
 </script>
 </body>
 </html>
 '''
 
-html = TEMPLATE.replace("__CONTENT__", frag)
-pathlib.Path(OUT).write_text(html, encoding="utf-8")
-print("생성 완료:", OUT, "(", len(html), "bytes )")
+
+def md_to_fragment(src):
+  frag = subprocess.run(
+    ["pandoc", src, "--from", "gfm", "--to", "html5", "--syntax-highlighting=none"],
+    capture_output=True, text=True, check=True,
+  ).stdout
+  # 맨 앞 중복 제목(h1)은 히어로와 겹치므로 제거
+  return re.sub(r'<h1[^>]*>.*?</h1>', '', frag, count=1, flags=re.S)
+
+
+def kpis_html(items):
+  out = ""
+  for v, unit, label in items:
+    small = f'<small>{unit}</small>' if unit else ''
+    out += f'<div class="kpi"><div class="v">{v}{small}</div><div class="l">{label}</div></div>'
+  return out
+
+
+def meta_html(items):
+  return "".join(f'<span>{k} <b>{v}</b></span>' for k, v in items)
+
+
+def build_page(src, out, cfg):
+  content = md_to_fragment(src)
+  html = PAGE_TMPL.format(
+    title=cfg["title"], desc=cfg["desc"], fonts=FONTS, style=STYLE,
+    theme=cfg.get("theme", ""), tag=cfg["tag"], h1=cfg["h1"], lead=cfg["lead"],
+    meta=meta_html(cfg["meta"]), kpis=kpis_html(cfg["kpis"]),
+    navtitle=cfg["navtitle"], footer=cfg["footer"], content=content,
+  )
+  pathlib.Path(out).write_text(html, encoding="utf-8")
+  print("생성 완료:", out, "(", len(html), "bytes )")
+
+
+# ── 페이지별 설정 ───────────────────────────────────────────────────────────
+PAGES = [
+  {
+    "src": "AX_FDE_사업추진안_SI시장.md", "out": "si.html", "theme": "theme-si",
+    "title": "AX FDE 사업 추진안 — SI 구축시장 혁신",
+    "desc": "한국 SI(시스템 구축) 시장을 맨먼스 인력기반에서 FDE 딜리버리 모델로 혁신하는 사업 추진안. 약 50명·Squad(4~7명)·6~8주 타임박스·가치기반 과금.",
+    "tag": "한국 SI 구축시장 · AX Forward Deployed Engineer · SI-1.0",
+    "h1": '맨먼스 SI를 넘어 <span class="hl">FDE 딜리버리</span>로 — 구축시장 혁신',
+    "lead": "한국 SI(시스템 구축) 시장을 사람을 많이 투입하는 맨먼스 모델이 아니라, 작은 정예 Squad가 재사용 자산·AI로 6~8주에 구축 가치를 입증하고 가치/성과기반 과금으로 전환하는 FDE 딜리버리 모델로 혁신하는 경영진 보고용 추진안입니다.",
+    "meta": [("작성 기준일", "2026-06-07"), ("버전", "SI-1.0"), ("독자", "경영진"), ("타깃", "SI 구축시장")],
+    "kpis": [("50", "명", "초기 전담조직 · 약 6 Squad"),
+             ("6~8", "주", "구축 가치입증 타임박스"),
+             ("2→4→6", "", "Squad 단계 확대(로드맵)"),
+             ("맨먼스→가치", "", "과금모델 전환")],
+    "navtitle": "AX FDE 추진안 · SI 구축시장",
+    "footer": "타깃: 한국 SI 구축시장. 맨먼스 인력기반 모델이 아닌 FDE 딜리버리 모델. · 자체 완결형 정적 페이지 · GitHub Pages 자동 배포",
+  },
+  {
+    "src": "AX_FDE_사업추진안_ITO_MSP시장.md", "out": "ito-msp.html", "theme": "theme-ito",
+    "title": "AX FDE 사업 추진안 — ITO · Application MSP 운영혁신",
+    "desc": "ITO(IT 운영위탁)·Application MSP(애플리케이션 관리형 서비스) 운영시장을 FDE 기반으로 혁신. AIOps·GenAI로 MTTR·자동화율·운영비 개선, 상주 맨먼스→성과기반 과금.",
+    "tag": "ITO · Application MSP 운영시장 · AX FDE · ITO/MSP v1.0",
+    "h1": '<span class="hl">FDE 기반</span> ITO · Application MSP 운영혁신',
+    "lead": "이미 고객이 맡긴 IT 운영위탁(ITO)·애플리케이션 관리(SM) 업무 자체를 AIOps·GenAI로 혁신합니다. Squad가 운영 현장에 내재화되어 6~8주에 운영 성과(MTTR·자동화·운영비)를 입증하고, 상주 맨먼스에서 성과/구독 기반 과금으로 전환하는 경영진 보고용 추진안입니다.",
+    "meta": [("작성 기준일", "2026-06-07"), ("버전", "ITO/MSP v1.0"), ("독자", "경영진"), ("타깃", "ITO · Application MSP")],
+    "kpis": [("74", "%", "AIOps 도입사 MTTR 단축"),
+             ("44", "%", "GenAI 운영 티켓분류 시간↓"),
+             ("50", "명", "초기 전담조직 · 약 6 Squad"),
+             ("6~8", "주", "운영성과 입증 타임박스")],
+    "navtitle": "AX FDE 추진안 · ITO/MSP 운영시장",
+    "footer": "타깃: ITO · Application MSP 운영시장. FDE 기반 운영업무 혁신. · 자체 완결형 정적 페이지 · GitHub Pages 자동 배포",
+  },
+  {
+    "src": "proposal.md", "out": "combined.html", "theme": "",
+    "title": "AX FDE 사업 추진안 (통합본 v2.0)",
+    "desc": "한국 MSP 운영 내재화형 AX FDE 조직·사업 추진안(통합본). 타깃이 SI/ITO/Palantir 준거로 혼재된 초기 통합 버전(참고용).",
+    "tag": "통합본(참고) · AX Forward Deployed Engineer · v2.0",
+    "h1": '운영 내재화형 <span class="hl">AX FDE</span> 조직·사업 추진안 <small style="font-size:.5em;opacity:.7">(통합본·참고)</small>',
+    "lead": "5개 축(전략·조직·프로세스·툴·역량)을 통합한 초기 추진안입니다. 타깃 시장이 SI·ITO·Palantir 세 준거로 혼재돼 있어, 이를 SI 버전과 ITO/MSP 버전으로 분리했습니다. 본 통합본은 참고용으로 보존합니다.",
+    "meta": [("작성 기준일", "2026-06-05"), ("버전", "v2.0(통합)"), ("독자", "경영진"), ("상태", "분리 전 원본")],
+    "kpis": [("7→12", "조원", "국내 MSP 시장(’23→’26, 추정)"),
+             ("74", "%", "AIOps 도입사 MTTR 단축"),
+             ("50", "명", "초기 전담조직 · 약 6 Squad"),
+             ("6~8", "주", "과제 타임박스")],
+    "navtitle": "AX FDE 추진안 · 통합본(참고)",
+    "footer": "초기 통합본(참고용). 타깃 명확화 버전은 SI / ITO·MSP 페이지를 참고. · 자체 완결형 정적 페이지",
+  },
+]
+
+# ── 비교 진입용 랜딩(index.html) ─────────────────────────────────────────────
+LANDING = '''<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AX FDE 사업 추진안 — 타깃별 두 버전 비교</title>
+<meta name="description" content="AX FDE 사업 추진안을 두 가지 타깃(① 한국 SI 구축시장 ② ITO·Application MSP 운영시장)으로 분리한 비교 진입 페이지." />
+''' + FONTS + '''
+<style>''' + STYLE + '''
+.choose{max-width:1080px;margin:0 auto;padding:0 24px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:-40px 0 24px;position:relative;z-index:2}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:30px 28px;display:flex;flex-direction:column;text-decoration:none;color:var(--ink);transition:transform .18s,box-shadow .18s}
+.card:hover{transform:translateY(-4px);box-shadow:0 18px 44px rgba(16,32,64,.16)}
+.card .badge{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.08em;
+  padding:6px 13px;border-radius:999px;margin-bottom:14px}
+.card.si .badge{background:#fff4e0;color:#b45309;border:1px solid #fcd9a0}
+.card.ito .badge{background:#e6fbf6;color:#0f766e;border:1px solid #a7e8da}
+.card h2{font-size:21px;font-weight:800;margin:0 0 8px;line-height:1.35}
+.card p{margin:0 0 16px;color:var(--ink-soft);font-size:14.5px;flex:1}
+.card .feat{list-style:none;padding:0;margin:0 0 18px}
+.card .feat li{position:relative;padding-left:20px;margin:7px 0;font-size:13.5px;color:#3a465c}
+.card .feat li::before{content:"▹";position:absolute;left:0;color:var(--brand);font-weight:700}
+.card .go{align-self:flex-start;font-weight:700;font-size:14.5px;color:var(--brand-deep)}
+.card.si .go{color:#b45309}.card.ito .go{color:#0f766e}
+.cmp{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:clamp(20px,3vw,34px);margin:8px 0 30px}
+.cmp h3{margin:0 0 16px;font-size:18px;color:var(--brand-deep)}
+.cmp .tbl-wrap{overflow-x:auto}
+.cmp table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+.cmp th,.cmp td{padding:11px 13px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.cmp thead th{background:linear-gradient(135deg,#1e2f54,#25406f);color:#eaf1ff;border:none}
+.cmp tbody tr:nth-child(even){background:var(--surface-2)}
+.cmp td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
+.cmp .si-col{color:#b45309}.cmp .ito-col{color:#0f766e}
+.extra{text-align:center;margin:0 0 40px}
+.extra a{color:var(--ink-soft);font-size:13.5px;text-decoration:none;border-bottom:1px dashed var(--line)}
+.extra a:hover{color:var(--brand)}
+@media (max-width:760px){.cards{grid-template-columns:1fr;margin-top:-24px}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <span class="tag">AX Forward Deployed Engineer · 타깃 분리 비교</span>
+    <h1>AX FDE 사업 추진안 — <span class="hl">두 가지 타깃</span> 비교</h1>
+    <p class="lead">초기 통합본은 타깃 시장이 SI 구축 · ITO/MSP 운영 · Palantir 제품모델 세 준거로 섞여 있었습니다. 이를 명확한 두 버전으로 분리했습니다. 아래에서 타깃을 골라 상세 추진안을 확인하세요.</p>
+    <div class="hero-meta">
+      <span>작성 기준일 <b>2026-06-07</b></span>
+      <span>구성 <b>두 타깃 버전 + 통합본(참고)</b></span>
+      <span>독자 <b>경영진</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="choose">
+  <div class="cards">
+    <a class="card si" href="si.html">
+      <span class="badge">버전 A · SI 구축시장</span>
+      <h2>맨먼스 SI를 넘어 FDE 딜리버리로 — 구축시장 혁신</h2>
+      <p>새 시스템을 "짓는" SI 구축 프로젝트 시장이 대상. 인력 투입(맨먼스)이 아니라 정예 Squad·재사용 자산·AI로 구축 가치를 입증하고 가치기반 과금으로 전환합니다.</p>
+      <ul class="feat">
+        <li>혁신 대상: 맨먼스 구축 모델(납기 지연·재작업·고정가 리스크)</li>
+        <li>핵심 KPI: 납기 단축·재작업률↓·자산 재사용률·구축 생산성</li>
+        <li>게이트: PoC → 본구축 전환/가치확정</li>
+      </ul>
+      <span class="go">상세 추진안 보기 →</span>
+    </a>
+    <a class="card ito" href="ito-msp.html">
+      <span class="badge">버전 B · ITO/MSP 운영시장</span>
+      <h2>FDE 기반 ITO · Application MSP 운영혁신</h2>
+      <p>이미 맡긴 운영위탁(ITO)·애플리케이션 관리(SM) 업무 자체가 대상. AIOps·GenAI로 운영 성과를 내고, 상주 맨먼스에서 성과/구독 과금으로 전환합니다.</p>
+      <ul class="feat">
+        <li>혁신 대상: 상주 맨먼스 운영(운영비·SLA·인력 의존)</li>
+        <li>핵심 KPI: MTTR·티켓 자동화율·운영비 절감·SLA</li>
+        <li>적용 영역: 인프라 운영·앱운영(SM)·서비스데스크·자동화</li>
+      </ul>
+      <span class="go">상세 추진안 보기 →</span>
+    </a>
+  </div>
+
+  <div class="cmp">
+    <h3>한눈에 보는 두 버전 차이</h3>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>구분</th><th class="si-col">A · SI 구축시장</th><th class="ito-col">B · ITO/MSP 운영시장</th></tr></thead>
+      <tbody>
+        <tr><td>대상 업무</td><td>시스템을 새로 "짓기"(구축)</td><td>맡긴 운영을 "잘 돌리기"(운영·SM)</td></tr>
+        <tr><td>혁신 대상</td><td>맨먼스 구축 모델</td><td>상주 단가 기반 운영위탁</td></tr>
+        <tr><td>통증</td><td>납기 지연·재작업·고정가 리스크</td><td>운영비 상승·SLA 압박·인력 의존</td></tr>
+        <tr><td>FDE 적용</td><td>재사용 자산·AI로 구축 생산성↑</td><td>현장 내재화, AIOps·GenAI로 운영 성과</td></tr>
+        <tr><td>G1 게이트</td><td>PoC → 본구축 전환/가치확정</td><td>PoC → 운영 전환</td></tr>
+        <tr><td>사이클</td><td>종료형 → 차기 구축 수주</td><td>운영 상시 잔존 → 다고객 확산</td></tr>
+        <tr><td>핵심 KPI</td><td>납기·재작업·자산재사용·구축생산성</td><td>MTTR·자동화율·운영비·SLA</td></tr>
+        <tr><td>과금 전환</td><td>맨먼스 → 가치/성과기반</td><td>상주 맨먼스 → 성과/구독</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <p class="extra"><a href="combined.html">· 분리 전 초기 통합본(v2.0, 참고용) 보기 →</a></p>
+</div>
+
+<footer>AX FDE 사업 추진안 · 타깃별 두 버전 비교 · 자체 완결형 정적 페이지 · GitHub Pages 자동 배포</footer>
+</body>
+</html>
+'''
+
+
+if __name__ == "__main__":
+  for cfg in PAGES:
+    build_page(cfg["src"], cfg["out"], cfg)
+  pathlib.Path("index.html").write_text(LANDING, encoding="utf-8")
+  print("생성 완료: index.html ( 랜딩 비교 페이지,", len(LANDING), "bytes )")
