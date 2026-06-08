@@ -734,6 +734,121 @@ CSP + 거버넌스 플랫폼 위에서</strong> 돌아가므로 반복 소비가
 <strong>상시성</strong>과 결합해 Palantir의 “라이선스 꼬리(반복 수익)”를
 <strong>우리식(중립·주권)</strong>으로 재현한다.</p></li>
 </ul>
+<p><strong>(5) 샘플 매출 시뮬레이션 (참조용 — 모든 수치는 예시·가정,
+실데이터로 대체)</strong></p>
+<blockquote>
+<p>⚠️ 아래는 <strong>모델 구조를 보여주기 위한 가상의 예시</strong>다.
+단가·회전·마진은 임의 가정값이며 <strong>의사결정 근거로 쓰지 말
+것</strong>. 실제 CSP 단가·플랫폼 과금·과제 단가 입력 시 대체한다.</p>
+</blockquote>
+<p><em>가정 (예시)</em></p>
+<table>
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 30%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>가정 항목</th>
+<th>예시값</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Squad당 연 운영 서비스 매출</td>
+<td>10억원</td>
+<td>6~8주 과제 × 분기 2~3회전 가정</td>
+</tr>
+<tr>
+<td>고객당 연 자사 CSP 소비</td>
+<td>1.5억원</td>
+<td>compute·storage, 워크로드를 우리 CSP로 이전 가정</td>
+</tr>
+<tr>
+<td>고객당 연 거버넌스·멀티LLM 게이트웨이</td>
+<td>1.0억원</td>
+<td>구독(시트) + 사용량(콜·토큰 라우팅)</td>
+</tr>
+<tr>
+<td>누적 고객(잔존)</td>
+<td>P1 2 → P2 6 → P3 12곳</td>
+<td>운영 상시성으로 자연 잔존(고객 이탈 전까지 반복)</td>
+</tr>
+<tr>
+<td>마진 (예시)</td>
+<td>서비스 30% / 반복(CSP+플랫폼) 65%</td>
+<td>반복 수익이 고마진</td>
+</tr>
+</tbody>
+</table>
+<p><em>Phase별 매출 구성 (억원, 예시)</em></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr>
+<th>구분</th>
+<th style="text-align: center;">P1 (2 Squad·누적 2고객)</th>
+<th style="text-align: center;">P2 (4 Squad·누적 6)</th>
+<th style="text-align: center;">P3 (6 Squad·누적 12)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>운영 서비스 (FDE, 면도기)</td>
+<td style="text-align: center;">20</td>
+<td style="text-align: center;">40</td>
+<td style="text-align: center;">60</td>
+</tr>
+<tr>
+<td>자사 CSP 소비 (반복, 면도날)</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">18</td>
+</tr>
+<tr>
+<td>거버넌스·게이트웨이 (반복, 면도날)</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">12</td>
+</tr>
+<tr>
+<td><strong>합계</strong></td>
+<td style="text-align: center;"><strong>25</strong></td>
+<td style="text-align: center;"><strong>55</strong></td>
+<td style="text-align: center;"><strong>90</strong></td>
+</tr>
+<tr>
+<td>반복 수익 비중</td>
+<td style="text-align: center;">20%</td>
+<td style="text-align: center;">27%</td>
+<td style="text-align: center;"><strong>33%</strong></td>
+</tr>
+<tr>
+<td>블렌디드 마진 (예시)</td>
+<td style="text-align: center;">37%</td>
+<td style="text-align: center;">40%</td>
+<td style="text-align: center;"><strong>42%</strong></td>
+</tr>
+<tr>
+<td>(대조) 순수 맨먼스 시</td>
+<td style="text-align: center;">매출 ~20·마진 ~30%</td>
+<td style="text-align: center;"><sub>40·</sub>30%</td>
+<td style="text-align: center;"><sub>60·</sub>30%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>읽는 법</strong>: 운영 서비스(면도기)는 가동 Squad 수에
+비례하지만, <strong>자사 CSP·거버넌스 플랫폼 소비(면도날)는 고객이
+누적되며 쌓여</strong> 반복 수익 비중이 20%→33%로 오르고, 고마진 반복이
+섞이며 블렌디드 마진도 37%→42%로 개선된다. <strong>순수 맨먼스(반복
+없음·마진 정체)와의 차이가 곧 이 모델의 값</strong>이다.</p>
 <blockquote>
 <p><strong>근거·한계</strong>: Palantir FDE·AIP/Foundry 수익구조와 美
 상업매출 성장, OpenAI·Anthropic의 FDE 채택·엔터프라이즈 과금, 토큰 단가
