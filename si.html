@@ -254,6 +254,15 @@ AgentForce급 패키지 엔터프라이즈 앱·에이전트 솔루션 부재(+F
 플레인)은 보유로 §2.7·§2.8 (7) 정합 명시. 확정 입력(50명·Squad
 4<sub>7·6</sub>8주·2→4→6 Squad) 불변.</td>
 </tr>
+<tr>
+<td>SI-1.3</td>
+<td>2026-06-09</td>
+<td><strong>6.5 FDE CDP 로드맵 신설</strong> — 기존 직무(업종
+컨설턴트·업종 전문가·SA·아키텍트·AI 개발자·Data 엔지니어) → FDE 역할
+패밀리 전환 매핑 → FDE 조직 내 CDP(시니어리티 사다리·멀티 래더·역할 간
+이동·인증)를 3단계 흐름으로 정리. 기존 6.1~6.3 체계 재배치(신규 가정
+없음).</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -2192,6 +2201,129 @@ Pro, CKA 등)은 보조 증빙.</li>
 인원이 더 빨리·덜 틀리게 구축할수록 보상. &gt; 구축 KPI·타임박스 준수의
 객관·자동 측정이 전제 — ③ 정산식·④ 측정 대시보드와 공동 확정.</li>
 </ul>
+<h3 id="fde-cdp-로드맵-기존-직무-fde-전환-fde-내-cdp">6.5 FDE CDP 로드맵
+(기존 직무 → FDE 전환 → FDE 내 CDP)</h3>
+<blockquote>
+<p>기존 조직의 직무가 <strong>어떻게 FDE 역할로 전환되고(전환 경로), FDE
+조직 안에서 어떻게 성장하는지(CDP)</strong>를 한 장으로 정리한다. (6.1
+역할 패밀리×시니어리티 · 6.2 양성 트랙 · 6.3 멀티 래더를 “전환 → 성장”
+흐름으로 통합.)</p>
+</blockquote>
+<p><strong>전체 흐름 (한눈에)</strong></p>
+<pre><code>[1단계] 기존 직무        [2단계] FDE 전환 트랙              [3단계] FDE 조직 내 CDP
+ 업종 컨설턴트 ┐                                              L1 Associate
+ 업종 전문가   │   공통1 AI 리터러시                          → L2 FDE
+ SA           ├─▶ → 공통2 타임박스·Asset 방법론           → L3 Senior ─┬─ 전문가(Principal/Architect)
+ 아키텍트      │   → 역할 모듈(택1) → 현장 OJT(Squad)        → L4 Lead  ─┼─ Squad Lead → 멀티 Squad 총괄
+ AI 개발자     │   → ▣ FDE 역할 인증                                     └─ 관리(챕터리드/조직장)
+ Data 엔지니어 ┘     (역할×시니어리티)                        + 역할 간 이동(lattice)</code></pre>
+<p><strong>[1단계] 기존 직무 → FDE 역할 매핑</strong> — 6개 기존 직무가
+4개 FDE 역할 패밀리로 수렴</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>기존 조직 직무</th>
+<th>주력 강점</th>
+<th>→ 전환 FDE 역할 패밀리</th>
+<th>채울 핵심 갭</th>
+<th style="text-align: center;">전환 난이도(추정)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>업종 컨설턴트</td>
+<td>업무·프로세스 진단·고객 설득(C)</td>
+<td><strong>컨설턴트</strong> (Discovery·AX 문제정의)</td>
+<td>AI 리터러시, 타임박스·Asset 활용</td>
+<td style="text-align: center;">낮음</td>
+</tr>
+<tr>
+<td>업종 전문가</td>
+<td>업종 도메인 지식(A)</td>
+<td><strong>업종 전문가</strong></td>
+<td>AI 리터러시, AX 유스케이스 발굴</td>
+<td style="text-align: center;">낮음</td>
+</tr>
+<tr>
+<td>SA (Solution Architect)</td>
+<td>솔루션 구성·제안 설계</td>
+<td><strong>아키텍트</strong></td>
+<td>비종속 통합·재사용 Asset 표준화, AI 적용 설계</td>
+<td style="text-align: center;">중간</td>
+</tr>
+<tr>
+<td>아키텍트</td>
+<td>시스템·구축 설계(D)</td>
+<td><strong>아키텍트</strong></td>
+<td>AX 프로세스 재설계, Asset 조립, 멀티LLM 거버넌스</td>
+<td style="text-align: center;">중간</td>
+</tr>
+<tr>
+<td>AI 개발자</td>
+<td>AI 모델·구현(B)</td>
+<td><strong>AI/Data Engineer</strong></td>
+<td>업무 도메인, 타임박스·Asset, 운영전환</td>
+<td style="text-align: center;">낮음</td>
+</tr>
+<tr>
+<td>Data 엔지니어</td>
+<td>데이터 파이프라인(B·D)</td>
+<td><strong>AI/Data Engineer</strong></td>
+<td>AI 적용·AX 유스케이스, 도메인</td>
+<td style="text-align: center;">중간</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Squad Lead는 별도 직무가 아니라 L3~L4 시니어가 과제 성격에 따라 맡는
+역할이다(6.1·3.4). 4개 패밀리(컨설턴트·업종 전문가·아키텍트·AI/Data
+Engineer)로 수렴해 16셀(역할×시니어리티) 직무 체계를 그대로 따른다.</p>
+</blockquote>
+<p><strong>[2단계] FDE 전환 트랙 (전환 브리지)</strong></p>
+<pre><code>기존 직무 ─▶ 공통1 AI 리터러시·AI 코드생성 (3~4주)
+        ─▶ 공통2 타임박스·Asset 방법론 (2주: 빠른 Discovery·Working Slice·Code Accelerator 활용)
+        ─▶ 역할 모듈 택1 (4~8주: 컨설턴트 / 업종 / 아키텍트 / AI·Data)
+        ─▶ 현장 OJT (Squad 합류 6~10주, 멘토 사인오프)
+        ─▶ ▣ FDE 역할 인증 ((역할×시니어리티) Certified) ─▶ FDE 조직 정식 배치</code></pre>
+<ul>
+<li><strong>전환 기간(추정, 출발점별)</strong>: 업종 컨설턴트·전문가 약
+4~5개월 / SA·아키텍트 약 5~7개월 / AI 개발자 약 3~4개월 / Data 엔지니어
+약 4~6개월. <em>(6.2 양성 트랙과 동일 체계, 추정)</em></li>
+<li>핵심은 “맨땅 개발”이 아니라 <strong>재사용 Asset·Code Accelerator를
+조립해 6~8주에 구축 가치를 내는</strong> 역량을 전원에게 심는
+것이다.</li>
+</ul>
+<p><strong>[3단계] FDE 조직 내 CDP (성장 경로)</strong> -
+<strong>시니어리티 사다리</strong>: L1 Associate(가이드 하 보조) → L2
+FDE(역할 1인분 독립) → L3 Senior(역할 리드·고객 설득) → L4 Lead(Squad
+Lead 자격). - <strong>멀티 래더 (3트랙, 직급·보상 대등)</strong>:</p>
+<pre><code>L3 Senior ─┬─ [전문가 트랙]    역할별 Principal / Chief Architect
+           ├─ [Squad Lead 트랙] Squad Lead → 멀티 Squad 총괄
+           └─ [관리 트랙]      챕터 리드 / 조직장 → 사업 리더</code></pre>
+<ul>
+<li><strong>역할 간 이동(lattice)</strong>: AI/Data Engineer→아키텍트,
+업종 전문가→컨설턴트, 시니어→Squad Lead 등. 추가 역할 모듈 + 시니어
+인증으로 공식화.</li>
+<li><strong>인증·뱃지</strong>: (역할×시니어리티) Certified + 마이크로
+뱃지(AI 코드생성·구축 자동화·업종·Asset 활용·기여). 외부
+인증(AWS/Azure/GCP Pro, CKA 등)은 보조 증빙.</li>
+<li><strong>승급 기준(요지)</strong>: Squad 구축성과(납기·재작업↓·Asset
+재사용) + 개인 역할 기여(동료평가) + Asset 기여를 종합(6.4 평가·보상
+연계).</li>
+</ul>
+<blockquote>
+<p><strong>로드맵 제약(7장·R4 연계)</strong>: 한 Squad는 4개 역할 +
+Lead가 모두 채워져야 뜬다. 6개 기존 직무가 4개 FDE 패밀리로 <strong>균형
+있게</strong> 전환돼야 하며, 가장 부족한 역할의 전환 처리량이 가동 Squad
+수의 선행제약이다.</p>
+</blockquote>
 <hr />
 <h2 id="이행-로드맵-4-phase">7. 이행 로드맵 (4-Phase)</h2>
 <blockquote>
